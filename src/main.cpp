@@ -3,16 +3,26 @@ main.cpp
 */
 
 #include <iostream>
+#include <vector>
 #include <ncurses.h>
 
 #include "Game.hpp"
+#include "Renderer.hpp"
+#include "Settings.hpp"
+
+enum class AppState {
+    Menu,
+    PlayMenu,
+    CustomGame,
+    Playing,
+    Settings,
+    Quit
+}; 
 
 int main() {
-    Game game(8, 8, 10);
-
-    int cursorX = 0;
-    int cursorY = 0;
-    bool centerGrid = true;
+    Settings settings;
+    settings.load();
+    settings.save();
 
     // --- ncurses setup ---
     initscr();
@@ -30,124 +40,263 @@ int main() {
     init_pair(6, COLOR_CYAN,    COLOR_BLACK);
     init_pair(7, COLOR_WHITE,   COLOR_BLACK);
     init_pair(8, COLOR_WHITE,   COLOR_BLACK);
+
+    std::vector<std::string> menuItems = {
+        "Play",
+        "Settings",
+        "Quit"
+    };
+    std::vector<std::string> playMenuItems = {
+        "Easy",
+        "Medium",
+        "Hard",
+        "Custom",
+        "Back"
+    };
     
-    bool running = true;
+    int playMenuIndex = 0;
+    int menuIndex = 0;
+    int customIndex = 0;
+    int settingsIndex = 0;
 
-    while (running) {
-        clear();
+    int cursorX = 0;
+    int cursorY = 0;
 
-        const Board& board = game.getBoard();
-        int width = board.getWidth();
-        int height = board.getHeight();
-        int startX;
-        int startY;
+    int customWidth = 20;
+    int customHeight = 20;
+    int customMines = 50;
 
-        if (centerGrid) {
-            int gridWidth = width * 3;
-            int gridHeight = height;
+    int boardWidth = settings.easy.width;
+    int boardHeight = settings.easy.height;
+    int mineCount = settings.easy.mines;
+    bool centerGrid = settings.centerGrid;
+        
+    AppState state = AppState::Menu;
+    Game game(boardWidth, boardHeight, mineCount);
 
-            startX = (COLS - gridWidth) / 2;
-            startY = (LINES - gridHeight) / 2;
+    while (state != AppState::Quit) {
+        // --- Menu State ---
+        if (state == AppState::Menu){
+            Renderer::drawMenu(menuItems, menuIndex);
+
+            int ch = getch();
+            switch (ch) {
+                case KEY_UP:
+                    if (menuIndex > 0) menuIndex--;
+                    break;
+
+                case KEY_DOWN:
+                    if (menuIndex < static_cast<int>(menuItems.size()) - 1) menuIndex++;
+                    break;
+
+                case 10: // ENTER
+                    if (menuIndex == 0) {
+                        game = Game(boardWidth, boardHeight, mineCount);
+                        cursorX = 0;
+                        cursorY = 0;
+                        state = AppState::PlayMenu;
+                    }
+
+                    if (menuIndex == 1) 
+                        state = AppState::Settings;
+
+                    if (menuIndex == 2)
+                        state = AppState::Quit;
+                    break;
+                }
         }
 
-        // --- Render Board ---
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
+        if (state == AppState::PlayMenu) {
+            Renderer::drawMenu(playMenuItems, playMenuIndex);
 
-                if (centerGrid)
-                    move(startY + y, startX + x * 3);
-                else
-                    move(y, x * 3);
+            int ch = getch();
+            switch (ch) {
+                case KEY_UP:
+                    if (playMenuIndex > 0) playMenuIndex--;
+                    break;
 
-                bool isCursor = (x == cursorX && y == cursorY);
-                if (isCursor) {
-                    attron(A_REVERSE);
-                }
+                case KEY_DOWN:
+                    if (playMenuIndex < static_cast<int>(playMenuItems.size()) - 1)
+                        playMenuIndex++;
+                    break;
 
-                const Cell& cell = board.getCell(x, y);
-
-                if (!cell.revealed) {
-                    if (cell.flagged)
-                        addch('F');
-                    else
-                        addch('#');
-                }
-                else if (cell.isMine) {
-                    addch('x');
-                } 
-                else {
-                    int n = cell.adjacentMines;
-                    if (n > 0) {
-                        attron(COLOR_PAIR(n));
-                        addch('0' + n);
-                        attroff(COLOR_PAIR(n));
-                    } else {
-                        addch('.');
+                case 10: // ENTER
+                    if (playMenuIndex == 0) { // Easy
+                        boardWidth = settings.easy.width;
+                        boardHeight = settings.easy.height;
+                        mineCount = settings.easy.mines;
+                        game = Game(boardWidth, boardHeight, mineCount);
+                        cursorX = 0;
+                        cursorY = 0;
+                        state = AppState::Playing;
                     }
-                }
 
-                if (isCursor) {
-                    attroff(A_REVERSE);
-                }
+                    if (playMenuIndex == 1) { // Medium
+                        boardWidth = settings.medium.width;
+                        boardHeight = settings.medium.height;
+                        mineCount = settings.medium.mines;
+                        game = Game(boardWidth, boardHeight, mineCount);
+                        cursorX = 0;
+                        cursorY = 0;
+                        state = AppState::Playing;
+                    }
+
+                    if (playMenuIndex == 2) { // Hard
+                        if (COLS < settings.medium.width * 3)
+                            centerGrid = false;
+                        boardWidth = settings.hard.width;
+                        boardHeight = settings.hard.height;
+                        mineCount = settings.hard.mines;
+                        game = Game(boardWidth, boardHeight, mineCount);
+                        cursorX = 0;
+                        cursorY = 0;
+                        state = AppState::Playing;
+                    }
+
+                    if (playMenuIndex == 3)
+                        state = AppState::CustomGame;
+
+                    if (playMenuIndex == 4) // Back
+                        state = AppState::Menu;
+                    break;
+
+                case 'q':
+                    state = AppState::Menu;
+                    break;
             }
         }
 
-        if (centerGrid)
-            move(startY + height + 2, startX);
-        else
-            move(height + 2, 0);            
-        printw("Mines Remaining: %d", game.getMinesRemaining());
+        // --- Game State ---
+        if (state == AppState::Playing) { 
+            const Board& board = game.getBoard();
+            int height = board.getHeight();
+            int width = board.getWidth();
+            
+            Renderer::drawGame(game, cursorX, cursorY, centerGrid);
 
-        // --- Render Status ---
-        if (centerGrid)
-            move(startY + height + 1, startX);
-        else
-            move(height + 1, 0);
+            int ch = getch();
+            switch (ch) {
+                case 'q':
+                    state = AppState::Menu;
+                    break;
 
-        if (game.getState() == GameState::Lost) {
-            printw("Status: Lost (press q)");
-        } 
-        else if (game.getState() == GameState::Won) {
-            printw("Status: Won! (press q)");
-        } 
-        else {
-            printw("Status: Running");
+                case 'r':
+                    if (game.getState() != GameState::Running)
+                        game = Game(boardWidth, boardHeight, mineCount);
+                    break;
+
+                case KEY_UP:
+                    if (cursorY > 0) cursorY--;
+                    break;
+
+                case KEY_DOWN:
+                    if (cursorY < height - 1) cursorY++;
+                    break;
+
+                case KEY_LEFT:
+                    if (cursorX > 0) cursorX--;
+                    break;
+
+                case KEY_RIGHT:
+                    if (cursorX < width - 1) cursorX++;
+                    break;
+
+                case ' ':
+                    game.reveal(cursorX, cursorY);
+                    break;
+
+                case 'f':
+                    game.toggleFlag(cursorX, cursorY);
+                    break;
+                
+            }
         }
 
-        refresh();
+        // --- CustomGame State ---
+        if (state == AppState::CustomGame) {
+            Renderer::drawCustomGame( customWidth, customHeight, customMines,customIndex);
+            
+            int ch = getch();
+            switch(ch) {
+                case KEY_UP:
+                    if (customIndex > 0) customIndex--;
+                    break;
 
-        int ch = getch();
+                case KEY_DOWN:
+                    if (customIndex < 4) customIndex++;
+                    break;
 
-        switch (ch) {
-            case 'q':
-                running = false;
-                break;
+                case KEY_LEFT:
+                    if (customIndex == 0 && customWidth > 5) customWidth--;
+                    if (customIndex == 1 && customHeight > 5) customHeight--;
+                    if (customIndex == 2 && customMines > 1) customMines--;
+                    break;
 
-            case KEY_UP:
-                if (cursorY > 0) cursorY--;
-                break;
+                case KEY_RIGHT:
+                    if (customIndex == 0) customWidth++;
+                    if (customIndex == 1) customHeight++;
+                    if (customIndex == 2) customMines++;
+                    break;
 
-            case KEY_DOWN:
-                if (cursorY < height - 1) cursorY++;
-                break;
+                case 10:
+                    if (customIndex == 3) {
+                        boardWidth = customWidth;
+                        boardHeight = customHeight;
+                        mineCount = customMines;
 
-            case KEY_LEFT:
-                if (cursorX > 0) cursorX--;
-                break;
+                        game = Game(boardWidth, boardHeight, mineCount);
+                        cursorX = 0;
+                        cursorY = 0;
 
-            case KEY_RIGHT:
-                if (cursorX < width - 1) cursorX++;
-                break;
+                        state = AppState::Playing;
+                    }
 
-            case ' ':
-                game.reveal(cursorX, cursorY);
-                break;
+                    if (customIndex == 4)
+                        state = AppState::PlayMenu;
+                    break;
 
-            case 'f':
-                game.toggleFlag(cursorX, cursorY);
-                break;
+                case 'q':
+                    state = AppState::PlayMenu;
+                    break;
+            }
+            if (customMines >= customWidth * customHeight)
+                customMines = customWidth * customHeight - 1;
+        }
+
+        // --- Settings State ---
+        if (state == AppState::Settings) {
+            Renderer::drawSettings(centerGrid, settingsIndex);
+
+            int ch = getch();
+            switch (ch) {
+                case KEY_UP:
+                    if (settingsIndex > 0)
+                        settingsIndex--;
+                    break;
+
+                case KEY_DOWN:
+                    if (settingsIndex < 1)
+                        settingsIndex++;
+                    break;
+
+                case 10: // ENTER
+                    if (settingsIndex == 0) {
+                        centerGrid = !centerGrid;
+                        settings.centerGrid = centerGrid;
+                        settings.save();
+                    }
+
+                    if (settingsIndex == 1) 
+                        state = AppState::Menu;
+                    break;
+
+                case 'q':
+                    state = AppState::Menu;
+                    break;
+            }
         }
     }
+    
 
     endwin();
     return 0;

@@ -12,6 +12,8 @@ add_executable(shellsweeper
     src/Cell.cpp
     src/Board.cpp
     src/Game.cpp
+    src/Renderer.cpp
+    src/Settings.cpp
 )
 
 target_include_directories(shellsweeper PRIVATE include)
