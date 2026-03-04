@@ -12,6 +12,7 @@ int main() {
 
     int cursorX = 0;
     int cursorY = 0;
+    bool centerGrid = true;
 
     // --- ncurses setup ---
     initscr();
@@ -38,12 +39,25 @@ int main() {
         const Board& board = game.getBoard();
         int width = board.getWidth();
         int height = board.getHeight();
+        int startX;
+        int startY;
+
+        if (centerGrid) {
+            int gridWidth = width * 3;
+            int gridHeight = height;
+
+            startX = (COLS - gridWidth) / 2;
+            startY = (LINES - gridHeight) / 2;
+        }
 
         // --- Render Board ---
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
 
-                move(y, x * 3);
+                if (centerGrid)
+                    move(startY + y, startX + x * 3);
+                else
+                    move(y, x * 3);
 
                 bool isCursor = (x == cursorX && y == cursorY);
                 if (isCursor) {
@@ -78,11 +92,17 @@ int main() {
             }
         }
 
-        move(height + 2, 0);
+        if (centerGrid)
+            move(startY + height + 2, startX);
+        else
+            move(height + 2, 0);            
         printw("Mines Remaining: %d", game.getMinesRemaining());
 
         // --- Render Status ---
-        move(height + 1, 0);
+        if (centerGrid)
+            move(startY + height + 1, startX);
+        else
+            move(height + 1, 0);
 
         if (game.getState() == GameState::Lost) {
             printw("Status: Lost (press q)");
