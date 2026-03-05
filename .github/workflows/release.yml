@@ -2,24 +2,23 @@ name: Build and Publish APT Repository
 
 permissions:
   contents: write
-  
+
 on:
   release:
     types: [published]
-    workflow_dispatch:
-    
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y cmake build-essential libncurses-dev dpkg-dev
+          sudo apt install -y cmake build-essential libncurses-dev dpkg-dev apt-utils
 
       - name: Build project
         run: |
@@ -36,6 +35,22 @@ jobs:
 
           dpkg-scanpackages repo /dev/null > repo/dists/stable/main/binary-amd64/Packages
           gzip -k repo/dists/stable/main/binary-amd64/Packages
+
+          cd repo/dists/stable
+          apt-ftparchive release . > Release
+          cd ../../..
+
+          echo "<html>
+          <head><title>ShellSweeper APT Repo</title></head>
+          <body>
+          <h1>ShellSweeper APT Repository</h1>
+          <pre>
+echo \"deb https://srblank.github.io/shellsweeper stable main\" | sudo tee /etc/apt/sources.list.d/shellsweeper.list
+sudo apt update
+sudo apt install shellsweeper
+          </pre>
+          </body>
+          </html>" > repo/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

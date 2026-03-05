@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(shellsweeper VERSION 1.0.0)
+project(shellsweeper VERSION 1.0.2)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Curses REQUIRED)
+
+add_compile_definitions(SHELLSWEEPER_VERSION="${PROJECT_VERSION}")
 
 add_executable(shellsweeper
     src/main.cpp
@@ -25,8 +27,9 @@ install(TARGETS shellsweeper DESTINATION bin)
 
 # ---- CPack configuration ----
 
+set(CPACK_DEBIAN_PACKAGE_SECTION "games")
 set(CPACK_PACKAGE_NAME "shellsweeper")
-set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Terminal Minesweeper built with ncurses")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 
