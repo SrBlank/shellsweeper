@@ -1,11 +1,17 @@
 <html>
 <head><title>ShellSweeper APT Repo</title></head>
 <body>
+
 <h1>ShellSweeper APT Repository</h1>
+
+<h2>Install</h2>
+
 <pre>
-echo "deb https://srblank.github.io/shellsweeper stable main" | sudo tee /etc/apt/sources.list.d/shellsweeper.list
+curl -fsSL https://srblank.github.io/shellsweeper/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/shellsweeper.gpg
+echo "deb [signed-by=/usr/share/keyrings/shellsweeper.gpg] https://srblank.github.io/shellsweeper stable main" | sudo tee /etc/apt/sources.list.d/shellsweeper.list
 sudo apt update
 sudo apt install shellsweeper
 </pre>
+
 </body>
 </html>
