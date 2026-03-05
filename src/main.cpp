@@ -23,11 +23,9 @@ enum class AppState {
 }; 
 
 int main(int argc, char** argv) {
-    const std::string VERSION = "1.0.0";
-
     if (argc > 1) {
         if (strcmp(argv[1], "--version") == 0) {
-            std::cout << "ShellSweeper " << VERSION << std::endl;
+            std::cout << "ShellSweeper " << SHELLSWEEPER_VERSION << std::endl;
             return 0;
         }
 
