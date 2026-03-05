@@ -5,10 +5,10 @@ Maintainer: SrBlank
 Installed-Size: 129
 Depends: libncurses6
 Filename: ./shellsweeper_1.0.5_amd64.deb
-Size: 35410
-MD5sum: 988b7d9293ea51b1a1f57a470f81e5d6
-SHA1: b3eb5b1e8522c5088d623e29f75bc59ad06a52a9
-SHA256: e5eca1596505bdb06411234242c8ef7ec9c6d79be70873bd650674a33f215e6d
+Size: 35408
+MD5sum: 28976a3b8b59db6046d9d47f95ddd741
+SHA1: 5d8c900161b58d6ee8b5fb816ad74ffe2e0c2ca2
+SHA256: ccab0c4b6411cb487281c63406309a4d01cd211c39d3f99f16ea6034a6450e9e
 Section: games
 Priority: optional
 Description: Terminal Minesweeper built with ncurses
