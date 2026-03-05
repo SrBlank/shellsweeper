@@ -1,0 +1,43 @@
+name: Build and Publish APT Repository
+
+permissions:
+  contents: write
+  
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y cmake build-essential libncurses-dev dpkg-dev
+
+      - name: Build project
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+          cpack
+
+      - name: Prepare APT repo
+        run: |
+          mkdir -p repo/dists/stable/main/binary-amd64
+          cp build/*.deb repo/
+
+          dpkg-scanpackages repo /dev/null > repo/dists/stable/main/binary-amd64/Packages
+          gzip -k repo/dists/stable/main/binary-amd64/Packages
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo

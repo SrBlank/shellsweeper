@@ -2,6 +2,8 @@
 main.cpp
 */
 
+#include <cstring>
+#include <string>
 #include <iostream>
 #include <vector>
 #include <ncurses.h>
@@ -20,7 +22,25 @@ enum class AppState {
     Quit
 }; 
 
-int main() {
+int main(int argc, char** argv) {
+    const std::string VERSION = "1.0.0";
+
+    if (argc > 1) {
+        if (strcmp(argv[1], "--version") == 0) {
+            std::cout << "ShellSweeper " << VERSION << std::endl;
+            return 0;
+        }
+
+        if (strcmp(argv[1], "--help") == 0) {
+            std::cout << "ShellSweeper\n\n";
+            std::cout << "Usage:\n";
+            std::cout << "  shellsweeper           Start game\n";
+            std::cout << "  shellsweeper --version Show version\n";
+            std::cout << "  shellsweeper --help    Show help\n";
+            return 0;
+        }
+    }
+
     Settings settings;
     settings.load();
     settings.save();
@@ -150,7 +170,7 @@ int main() {
                     }
 
                     if (playMenuIndex == 2) { // Hard
-                        if (COLS < settings.medium.width * 4)
+                        if (COLS < settings.hard.width * 4)
                             centerGrid = false;
                         boardWidth = settings.hard.width;
                         boardHeight = settings.hard.height;
@@ -236,7 +256,6 @@ int main() {
                 case 'f':
                     game.toggleFlag(cursorX, cursorY);
                     break;
-                
             }
         }
 
@@ -324,8 +343,6 @@ int main() {
             }
         }
     }
-    
-
     endwin();
     return 0;
 }
