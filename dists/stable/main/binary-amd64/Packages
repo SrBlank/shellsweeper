@@ -1,14 +1,14 @@
 Package: shellsweeper
-Version: 1.0.2
+Version: 1.0.3
 Architecture: amd64
 Maintainer: SrBlank
 Installed-Size: 129
 Depends: libncurses6
-Filename: repo/shellsweeper_1.0.2_amd64.deb
-Size: 35412
-MD5sum: 4c979ece9561e4a7f531734e435ddb9e
-SHA1: ee15f098d8c3be346ffcca34a1502d989f81359e
-SHA256: 6f7ec4eb1847d2cf258fd2a07aa99ea09e5790ca945517b16b7ee59fb1adda95
+Filename: ./shellsweeper_1.0.3_amd64.deb
+Size: 35416
+MD5sum: 16c47745020de56a793f49dd9d95fe97
+SHA1: 081ffb59c9ca8ac522064ec0826f069435b3a6c7
+SHA256: f17c0f5ff152a59dfbc92af5a52452fbf5e2650529a7880fdd4ec33d94c821c9
 Section: games
 Priority: optional
 Description: Terminal Minesweeper built with ncurses
