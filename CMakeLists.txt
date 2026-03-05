@@ -14,6 +14,7 @@ add_executable(shellsweeper
     src/Game.cpp
     src/Renderer.cpp
     src/Settings.cpp
+    src/HighScores.cpp
 )
 
 target_include_directories(shellsweeper PRIVATE include)

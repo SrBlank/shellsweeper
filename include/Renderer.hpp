@@ -20,7 +20,8 @@ void drawGame(
     const Game& game,
     int cursorX,
     int cursorY,
-    bool centerGrid
+    bool centerGrid,
+    int bestTime
 );
 
 void drawCustomGame(

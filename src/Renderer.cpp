@@ -11,7 +11,6 @@ Renderer.cpp
 namespace Renderer {
 
 void drawMenu(const std::vector<std::string>& items, int selected) {
-
     clear();
 
     std::string title = "ShellSweeper";
@@ -35,7 +34,7 @@ void drawMenu(const std::vector<std::string>& items, int selected) {
 }
 
 
-void drawGame(const Game& game, int cursorX, int cursorY, bool centerGrid) {
+void drawGame(const Game& game, int cursorX, int cursorY, bool centerGrid, int bestTime) {
     clear();
 
     const Board& board = game.getBoard();
@@ -103,8 +102,13 @@ void drawGame(const Game& game, int cursorX, int cursorY, bool centerGrid) {
     else
         move(height + 2, 0);
 
-    printw("Mines Remaining: %d", game.getMinesRemaining());
-
+    printw(
+        "Time: %03d   Mines: %03d   Best: %03d",
+        game.getElapsedTime(),
+        game.getMinesRemaining(),
+        bestTime
+    );
+    
     if (centerGrid)
         move(startY + height + 1, startX);
     else

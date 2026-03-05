@@ -4,6 +4,7 @@ Game.hpp
 
 #pragma once
 
+#include <chrono>
 #include "Board.hpp"
 
 enum class GameState {
@@ -21,13 +22,16 @@ public:
 
     int getFlagsPlaced() const;
     int getMinesRemaining() const;
+    int getElapsedTime() const;
 
     GameState getState() const;
     const Board& getBoard() const;
 private:
     Board board;
     GameState state;
-
+    std::chrono::time_point<std::chrono::steady_clock> startTime;
+    
+    bool timerStarted;
     int revealedSafeCells;
     int totalSafeCells;
     int flagsPlaced;

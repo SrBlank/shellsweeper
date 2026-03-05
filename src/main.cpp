@@ -9,6 +9,7 @@ main.cpp
 #include "Game.hpp"
 #include "Renderer.hpp"
 #include "Settings.hpp"
+#include "HighScores.hpp"
 
 enum class AppState {
     Menu,
@@ -23,6 +24,9 @@ int main() {
     Settings settings;
     settings.load();
     settings.save();
+    
+    HighScores scores;
+    scores.load();
 
     // --- ncurses setup ---
     initscr();
@@ -81,6 +85,10 @@ int main() {
 
             int ch = getch();
             switch (ch) {
+                case 'q':
+                    state = AppState::Quit;
+                    break;
+
                 case KEY_UP:
                     if (menuIndex > 0) menuIndex--;
                     break;
@@ -142,7 +150,7 @@ int main() {
                     }
 
                     if (playMenuIndex == 2) { // Hard
-                        if (COLS < settings.medium.width * 3)
+                        if (COLS < settings.medium.width * 4)
                             centerGrid = false;
                         boardWidth = settings.hard.width;
                         boardHeight = settings.hard.height;
@@ -171,8 +179,16 @@ int main() {
             const Board& board = game.getBoard();
             int height = board.getHeight();
             int width = board.getWidth();
-            
-            Renderer::drawGame(game, cursorX, cursorY, centerGrid);
+            int bestTime = 0;
+
+            if (boardWidth == settings.easy.width)
+                bestTime = scores.scores.easy;
+            else if (boardWidth == settings.medium.width)
+                bestTime = scores.scores.medium;
+            else if (boardWidth == settings.hard.width)
+                bestTime = scores.scores.hard;
+
+            Renderer::drawGame(game, cursorX, cursorY, centerGrid, bestTime);
 
             int ch = getch();
             switch (ch) {
@@ -203,6 +219,18 @@ int main() {
 
                 case ' ':
                     game.reveal(cursorX, cursorY);
+                    if (game.getState() == GameState::Won) {
+                        int time = game.getElapsedTime();
+
+                        if (boardWidth == settings.easy.width)
+                            scores.updateEasy(time);
+
+                        else if (boardWidth == settings.medium.width)
+                            scores.updateMedium(time);
+
+                        else if (boardWidth == settings.hard.width)
+                            scores.updateHard(time);
+                    }
                     break;
 
                 case 'f':
