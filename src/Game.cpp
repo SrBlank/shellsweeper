@@ -10,12 +10,18 @@ Game::Game(int width, int height, int mineCount)
       state(GameState::Running),
       revealedSafeCells(0),
       totalSafeCells(width * height - mineCount),
-      flagsPlaced(0)
+      flagsPlaced(0),
+      timerStarted(false)
 {}
 
 void Game::reveal(int x, int y) {
     if (state != GameState::Running) {
         return;
+    }
+
+    if (!timerStarted) {
+        startTime = std::chrono::steady_clock::now();
+        timerStarted = true;
     }
 
     int result = board.reveal(x, y);
@@ -48,6 +54,17 @@ void Game::toggleFlag(int x, int y) {
         flagsPlaced++;
 
     board.toggleFlag(x, y);
+}
+
+int Game::getElapsedTime() const {
+    if (!timerStarted)
+        return 0;
+
+    auto now = std::chrono::steady_clock::now();
+
+    return std::chrono::duration_cast<std::chrono::seconds>(
+        now - startTime
+    ).count();
 }
 
 int Game::getFlagsPlaced() const {
